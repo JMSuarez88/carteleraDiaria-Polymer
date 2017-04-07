@@ -1,0 +1,134 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="shared-styles.html">
+
+</head><body><dom-module id="ver-cursadas">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+        @apply(--paper-font-common-base);
+      }
+
+      iron-list {
+        --iron-list-items-container: {
+          max-width: 800px;
+          margin: auto;
+          margin-top: 10px;
+        };
+      }
+      .item {
+        @apply(--layout-horizontal);
+        padding: 10px;
+        background-color: white;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        margin-bottom: 10px;
+        border-radius: 5px;
+      }
+      .pad {
+        padding: 0 0 0 16px;
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .primary {
+        font-size: 18px;
+      }
+      .shortText, .longText {
+        font-size: 14px;
+      }
+      .longText {
+        color: gray;
+        display: none;
+      }
+      .item:hover .shortText::after {
+        content: ' [+]';
+        color: gray;
+      }
+      .item.expanded:hover .shortText::after {
+        content: '';
+      }
+      .item.expanded .longText {
+        display: block;
+      }
+      /*.item.expanded:hover .longText::after {
+        content: ' [–]';
+      }*/
+      .spacer {
+        @apply(--layout-flex);
+      }
+
+      .header-box {
+        background-color: #2D90AE;
+        text-align: center;
+        font-size: 16px;
+        border-radius: 5px;
+        padding: 5px;
+        color: white;
+      }
+
+      @media (max-width: 460px) {
+        paper-toolbar .bottom.title {
+          font-size: 14px;
+        }
+      }
+
+      .flex-horizontal {
+        @apply(--layout-horizontal);
+        height: 100%
+      }
+
+      .flexchild {
+        @apply(--layout-flex);
+      }
+
+      .flexIcons {
+        margin-left: 10px;
+      }
+
+    </style>
+
+    <firebase-auth user="{{user}}"></firebase-auth>
+
+    <firebase-document id="query" path="users/[[user.uid]]/data" data="{{user_data}}"></firebase-document>
+
+    <div style="text-align:center">
+      Mis cursadas del día: [[currentDate]] - [[ciudad]]
+    </div>
+
+    <iron-list id="list" items="[{user_data]]" as="data" selection-enabled="" multi-selection="">
+      <template>
+
+        <div>
+          <div class$="[[getClassForItem(item, selected)]]" tabindex$="[[tabIndex]]">
+            <div class="pad">
+              <div class="primary">
+                <div class="flex-horizontal">
+                  <div class="flexchild">[[item.cursadas]]</div>
+                  <div class="flexIcons">
+                    <span class="header-box">
+                      [[item.comicion]]
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="longText">
+                <div><b>Edificio:</b> [[item.sede]]</div>
+                <div><b>Horario:</b> [[item.horario]]</div>
+                <div><b>Profesor:</b> [[item.profesor]]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+      </template>
+    </iron-list>
+  </template>
+
+  <script>Polymer({is:"ver-cursadas",properties:{currentDate:{type:String,value:"05/02/2017"},ciudad:{type:String,value:"Junin/Pergamino"}},attached:function(){this.$.list.scrollTarget=this.ownerDocument.documentElement},iconForItem:function(e){return e?e.integer<50?"star-border":"star":""},getClassForItem:function(e,t){return t?"item expanded":"item"},goDebbuger:function(){}});</script>
+</dom-module>
+</body></html>

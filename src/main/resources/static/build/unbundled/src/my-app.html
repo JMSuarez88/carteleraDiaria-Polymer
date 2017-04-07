@@ -1,0 +1,186 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+
+
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="my-login.html">
+
+</head><body><dom-module id="my-app">
+  <template>
+    <style>
+      :host {
+        --app-primary-color:        #00A7DA;
+        --app-secondary-color:      black;
+        --dark-primary-color:       #455A64;
+        --default-primary-color:    #607D8B;
+        --light-primary-color:      white;
+        --text-primary-color:       #FFFFFF;
+        --accent-color:             #9E9E9E;
+        --primary-background-color: white;
+        --primary-text-color:       #212121;
+        --secondary-text-color:     #757575;
+        --disabled-text-color:      #BDBDBD;
+        --divider-color:            #BDBDBD;
+        display: block;
+        color: #616161
+      }
+
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+        background-image:url(../images/bg-login.png);
+        font-size: 25px
+      }
+
+      .left-side-menu {
+        background-color:#00A7DA;
+      }
+
+      .drawer-list {
+        margin: 0 20px;
+      }
+
+      paper-fab {
+        background-color: #00A7DA;
+        position: fixed;
+        margin: 15px;
+        right: 0;
+        bottom: 0;
+      }
+
+      paper-button {
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      paper-button[disabled] {
+        background-color: inherit;
+      }
+
+      .user_data {
+        width: 100%;
+        height: auto;
+        font-size: 13px;
+        background-color:rgba(0, 0, 0, 0.3);
+        margin-bottom: 30px;
+        color:white;
+        text-shadow:1px 1px rgba(0, 0, 0, 0.15);
+      }
+
+      vaadin-combo-box:label {
+        background-color: yellow
+      }
+
+      iron-image {
+        width: 75px;
+        height: 75px;
+        margin: 0 8px 0 3px;
+        color: #757575;
+        border-radius: 50%;
+        background-color: #fff;
+        float:left;
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+
+    <app-location route="{{route}}"></app-location>
+
+    <app-route route="{{route}}" pattern="/:page" data="{{routeData}}" tail="{{subroute}}"></app-route>
+
+    <firebase-app id="firebase" auth-domain="cartelera-diaria.firebaseapp.com" database-url="https://cartelera-diaria.firebaseio.com/" api-key="AIzaSyCsq1kD38v4vTWp5d8qm4JdgT6o1upaXF0"></firebase-app>
+
+    <firebase-auth id="auth" user="{{user}}"></firebase-auth>
+
+    <firebase-query id="query" path="users/{{user.uid}}/data" data="{{user_data}}"></firebase-query>
+
+    <template is="dom-if" if="[[user]]">
+      <app-drawer-layout fullbleed="">
+        
+        <app-drawer>
+          <div style="height: 100%;background-image:url(../images/bg.png)">
+            <div class="user_data">
+              <div style="padding:5px">
+                <iron-image id="photoUrl"></iron-image>
+                <div style="font-weight:bold">
+                  [[user.displayName]]
+                </div>
+                <div class="">
+                  [[user.email]]
+                </div>
+              </div>
+            </div>
+            <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+              <div>
+                <paper-button on-tap="_goCursadasFull" id="todas_las_cursadas" disabled="">Todas las cursadas</paper-button>
+              </div>
+              <div>
+                <paper-button on-tap="_goCambiarMaterias" id="cambiar_materias" disabled="">Cambiar materias</paper-button>
+              </div>
+              <div>
+                <paper-button o100%n-tap="_goFaq" id="sugerencias">Sugerencias</paper-button>
+              </div>
+              <div>
+                <paper-button on-tap="_goFaq" id="faq">Ayuda</paper-button>
+              </div>
+              <div style="margin-top:50px">
+                <paper-button on-tap="logout" hidden$="[[!user]]">Cerrar sesion</paper-button>
+              </div>
+            </iron-selector>
+          </div>
+        </app-drawer>
+
+        
+        <app-header-layout has-scrolling-region="">
+
+          <app-header condenses="" reveals="" effects="waterfall" fixed="">
+            <app-toolbar>
+              <paper-icon-button icon="menu" drawer-toggle=""></paper-icon-button>
+              Cartelera Diaria
+            </app-toolbar>
+          </app-header>
+
+          <main>
+            <iron-pages selected="{{page}}" attr-for-selected="name" fallback-selection="view404" role="main">
+              <config-materias name="config-materias"></config-materias>
+              <ver-cursadas name="ver-cursadas"></ver-cursadas>
+              <my-view404 name="view404"></my-view404>
+            </iron-pages>
+          </main>
+
+          <paper-fab id="button" icon="check" on-tap="_goToCursadas"></paper-fab>
+
+        </app-header-layout>
+      </app-drawer-layout>
+    </template>
+
+    <template is="dom-if" if="[[!user]]">
+      <my-login></my-login>
+    </template>
+
+
+  </template>
+
+  <script>Polymer({is:"my-app",properties:{page:{type:String,reflectToAttribute:!0,observer:"_pageChanged"}},observers:["_routePageChanged(routeData.page)"],_mainPage:function(){"config-materias"===this.page},_routePageChanged:function(a){this.page=a||"config-materias"},_pageChanged:function(a){var i=this.resolveUrl(a+".html");this.importHref(i,null,this._showPage404,!0)},_showPage404:function(){this.page="view404"},_goToCursadas:function(){this._checkFields()?(this.$.query.ref.push({ciudad:this.$$("config-materias").ciudad_elegida,cursadas:this.$$("config-materias").cursadas}),this._routePageChanged("ver-cursadas"),this.$$("#button").style.display="none",this.$$("#todas_las_cursadas").disabled=!1,this.$$("#cambiar_materias").disabled=!1):this.$$("config-materias").$.ciudad_error.style.display="block"},_goCambiarMaterias:function(){this._routePageChanged("config-materias"),this.$$("#button").style.display="initial",this.$$("#todas_las_cursadas").disabled=!0,this.$$("#cambiar_materias").disabled=!0,this.$$("config-materias").$.materias_combo_box.value=""},_goLogin:function(){this._routePageChanged("login")},_checkFields:function(){return""!=this.$$("config-materias").ciudad_elegida&&0!=this.$$("config-materias").cursadas.length?(this.$$("config-materias").$.error_ciudad.style.display="none",this.$$("config-materias").$.error_materias.style.display="none",!0):(""==this.$$("config-materias").ciudad_elegida?this.$$("config-materias").$.error_ciudad.style.display="block":this.$$("config-materias").$.error_ciudad.style.display="none",0==this.$$("config-materias").cursadas.length?this.$$("config-materias").$.error_materias.style.display="block":this.$$("config-materias").$.error_materias.style.display="none",!1)},logout:function(){this.$.auth.signOut()}});</script>
+</dom-module>
+</body></html>

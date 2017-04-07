@@ -1,0 +1,40 @@
+<html><head><link rel="import" href="../bower_components/google-signin/google-signin.html">
+
+</head><body><dom-module id="my-login">
+  <style>
+    :host {
+      display: block;
+    }
+
+    app-header-layout {
+      background-color: #00A7DA;
+      background-image:url(../images/bg-login.png)
+    }
+
+    .container {
+      width: auto;
+      height: auto;
+      margin: auto;
+    }
+
+    paper-button {
+      background-color: white;
+      width: 300px;
+      height: 55px;
+    }
+  </style>
+  <template>
+
+    <firebase-auth id="auth" user="{{user}}" status-known="{{statusKnown}}" provider="google"></firebase-auth>
+
+    <app-header-layout fullbleed="">
+      <div class="container">
+        <google-signin brand="google" width="wide" on-tap="login"></google-signin>
+      </div>
+    </app-header-layout>
+
+  </template>
+
+  <script>Polymer({is:"my-login",properties:{user:{type:Object},statusKnown:{type:Object}},login:function(){this.$.auth.signInWithPopup()}});</script>
+</dom-module>
+</body></html>

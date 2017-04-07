@@ -1,0 +1,281 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="ver-cursadas">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+        @apply(--paper-font-common-base);
+      }
+
+      iron-list {
+        --iron-list-items-container: {
+          max-width: 800px;
+          margin: auto;
+          margin-top: 10px;
+        };
+      }
+      .item {
+        @apply(--layout-horizontal);
+        padding: 5px;
+        background-color: white;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        margin-bottom: 10px;
+        border-radius: 5px;
+      }
+      .pad {
+        padding: 0 0 0 0;
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .primary {
+        font-size: 16px;
+        text-transform:uppercase
+      }
+      .longText {
+        color: gray;
+        font-size: 16px;
+        display: none;
+        text-transform:capitalize;
+        padding:5px 5px 0 5px;
+      }
+      .item:hover .shortText::after {
+        content: ' [+]';
+        color: gray;
+      }
+      .item.expanded:hover .shortText::after {
+        content: '';
+      }
+      .item.expanded .longText {
+        display: block;
+      }
+      /*.item.expanded:hover .longText::after {
+        content: ' [–]';
+      }*/
+      .spacer {
+        @apply(--layout-flex);
+      }
+
+      .header-box {
+        background-color: #2D90AE;
+        text-align: center;
+        font-size: 16px;
+        border-radius: 5px;
+        padding: 5px;
+        color: white;
+      }
+
+      @media (max-width: 460px) {
+        paper-toolbar .bottom.title {
+          font-size: 14px;
+        }
+      }
+
+      .flex-horizontal {
+        @apply(--layout-horizontal);
+        height: 100%
+      }
+
+      .flexchild {
+        @apply(--layout-flex);
+      }
+
+      .flexIcons {
+        margin-left: 10px;
+      }
+
+      paper-button {
+        width:260px;
+        font-size: 16px;
+        background-color: #00A7DA;
+        color:white
+      }
+
+    </style>
+
+    <app-localstorage-document
+        key="currentuser.local.data"
+        data="{{user}}"></app-localstorage-document>
+
+    <firebase-auth id="auth" user="{{loggedUser}}"></firebase-auth>
+
+    <firebase-query
+      id="query"
+      path="users/{{loggedUser.uid}}/data"
+      data="{{user_data}}"></firebase-query>
+
+    <firebase-query
+      id="query_todas"
+      path="cartelera"
+      data="{{cursadas_data}}"
+      orderByValue></firebase-query>
+
+    <div style="text-align:center;margin-top:15px">
+      <div style="font-size:20px">Cursadas del dia [[user.fecha]] - <span style="text-transform:capitalize">[[user.ciudad]]</span></div>
+      <div style="margin:15px 0 25px 0">
+        <paper-button on-tap="_switchView" id="action_button">Ver todas las cursadas</paper-button>
+      </div>
+
+    </div>
+
+    <iron-list id="list" items="{{cursadas}}" as="cursada" selection-enabled>
+      <template>
+        <div>
+          <div class$="[[_getClassForItem(cursada, selected)]]" tabindex$="[[tabIndex]]">
+            <div class="pad">
+              <div class="primary">
+
+                <div class="flex-horizontal">
+                  <div style="width:100%; padding:5px">[[cursada.materia]]</div>
+                  <div style="width:130px;font-size:14px;text-align:right;padding:5px">[[cursada.hora]]</div>
+                </div>
+
+              </div>
+              <div class="longText">
+                <div><span style="font-weight:bold">[[cursada.tipo]]</span> ([[cursada.comision]])</div>
+                <div><span style="font-weight:bold">Edificio:</span> [[cursada.edificio]]</div>
+                <div><span style="font-weight:bold">Profesores:</span> [[cursada.profesores]]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </iron-list>
+
+    <div id="sin_cursadas" style="text-align:center;margin-top:50px;font-size:25px;padding:0 30px 0 30px;font-weight:bold;color:rgba(0,0,0,0.355)">
+      Hoy no cursas ninguna materia
+    </div>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'ver-cursadas',
+
+      properties: {
+        loggedUser: {
+          type: Object
+        },
+        user_data: {
+          type: Object
+        },
+        cursadas_data: {
+          type: Object
+        },
+        user: {
+          type: Object,
+          value: {
+            "ciudad" : "",
+            "fecha" : "",
+            "cursadas" : []
+          }
+        },
+        cursadas: {
+          type: Array,
+          value: []
+        }
+      },
+
+      observers: [
+        '_userDbData(user_data.*)',
+        '_cursadasDbData(cursadas_data.*)'
+      ],
+
+      attached: function() {
+        // Use the document element
+        this.$.list.scrollTarget = this.ownerDocument.documentElement;
+      },
+
+      _userDbData: function() {
+        if (this.user_data.length > 0) {
+          this.set('user.ciudad',this.user_data[0].ciudad);
+          this.set('user.fecha',this.user_data[0].fecha);
+          this.set('user.cursadas',this.user_data[0].cursadas);
+          // 'ver todas...' could remains as 'ver mis cursadas'
+          this.$$('#action_button').innerText = 'ver todas las cursadas';
+          // Set up cursadas list items
+          this._handleCursadasData(this.cursadas_data)
+        }
+      },
+      // Executed when cursadas updates values at db
+      _cursadasDbData: function(data) {
+        if (this.user.cursadas.length != 0) {
+          this.set('cursadas',[])
+          this._handleCursadasData(data.base)
+        }
+      },
+      // Set up cursadas list items
+      _handleCursadasData: function(data) {
+        this.set('cursadas',[]);
+        if (this.user.cursadas.length != 0) {
+          if (data.length == 3) {
+            var aux;
+            for (var i = 0; i < data.length; i++) {
+              if (data[i].$key === this.user.ciudad) {
+                aux = data[i];
+                for (var m = 0; m < aux.length; m++) {
+                  if (this.user.cursadas.indexOf(aux[m].materia) != -1) {
+                    if (this.cursadas.indexOf(aux[m]) == -1) {
+                      this.push('cursadas',aux[m])
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        if (this.cursadas.length == 0) {
+          this.$$('#sin_cursadas').style.display = 'block'
+        } else {
+          this.$$('#sin_cursadas').style.display = 'none'
+        }
+      },
+      // Switch between 'mis cursadas' and 'ver todas...'
+      _switchView: function() {
+        if (this.$$('#action_button').innerText.toLowerCase() === 'ver todas las cursadas') {
+          this.$$('#action_button').innerText = 'ver mis cursadas';
+          this.$$('#action_button').style.backgroundColor = "#73D216";
+          if (this.$$('#sin_cursadas').style.display == 'block') {
+            this.$$('#sin_cursadas').style.display = 'none'
+          }
+          for (var i = 0; i < this.cursadas_data.length; i++) {
+            if (this.cursadas_data[i].$key === this.user.ciudad) {
+              this.$.list.items = this.cursadas_data[i]
+            }
+          }
+        } else {
+          this.$$('#action_button').innerText = 'ver todas las cursadas';
+          this.$$('#action_button').style.backgroundColor = "#00A7DA";
+          this.$.list.items = this.cursadas;
+          if (this.cursadas.length == 0) {
+            this.$$('#sin_cursadas').style.display = 'block'
+          }
+        }
+      },
+      // Not sure but has to do wi
+      _getClassForItem: function(item, selected) {
+        return selected ? 'item expanded' : 'item';
+      }
+
+      /*iconForItem: function(item) {
+        return item ? (item.integer < 50 ? 'star-border' : 'star') : '';
+      },*/
+    });
+  </script>
+</dom-module>

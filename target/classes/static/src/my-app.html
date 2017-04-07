@@ -1,0 +1,381 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<!-- App Elements -->
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/app-storage/app-localstorage/app-localstorage-document.html">
+<!-- Paper Elements -->
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-fab/paper-fab.html">
+<!-- Iron Elements -->
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<!-- Firebase Elements -->
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<!-- My Elements -->
+<link rel="import" href="my-login.html">
+<link rel="import" href="ver-cursadas.html">
+<link rel="import" href="config-materias.html">
+<link rel="import" href="sugerencias.html">
+
+<!-- Other Elements -->
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-app">
+  <template>
+    <style>
+      :host {
+        --app-primary-color:        #00A7DA;
+        --app-secondary-color:      black;
+        --dark-primary-color:       #455A64;
+        --default-primary-color:    #607D8B;
+        --light-primary-color:      white;
+        --text-primary-color:       #FFFFFF;
+        --accent-color:             #9E9E9E;
+        --primary-background-color: white;
+        --primary-text-color:       #212121;
+        --secondary-text-color:     #757575;
+        --disabled-text-color:      #BDBDBD;
+        --divider-color:            #BDBDBD;
+        display: block;
+        color: #616161
+      }
+
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+        font-size: 25px
+      }
+
+      .left-side-menu {
+        background-color:#00A7DA;
+      }
+
+      .drawer-list {
+        margin: 0 20px;
+      }
+
+      paper-fab {
+        background-color: #00A7DA;
+        position: fixed;
+        margin: 15px;
+        right: 0;
+        bottom: 0;
+      }
+
+      paper-button {
+        min-width:inherit;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      paper-button[disabled] {
+        background-color: inherit;
+      }
+
+      .user_data {
+        width: 100%;
+        height: auto;
+        font-size: 13px;
+        background-color:rgba(0, 0, 0, 0.45);
+        margin-bottom: 30px;
+        color:white;
+        text-shadow:1px 1px rgba(0, 0, 0, 0.15);
+      }
+
+      vaadin-combo-box:label {
+        background-color: yellow
+      }
+
+      .polyart-logo {
+        width: auto;
+        height: auto;
+      }
+
+      .iron-image {
+        width: 75px;
+        height: 75px;
+        margin: 0 8px 0 3px;
+        color: #757575;
+        border-radius: 50%;
+        background-color: #fff;
+        float:left;
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+
+    <app-location route="{{route}}"></app-location>
+
+    <app-route
+        route="{{route}}"
+        pattern="/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+
+    <firebase-app auth-domain="cartelera-diaria.firebaseapp.com"
+        database-url="https://cartelera-diaria.firebaseio.com/"
+        api-key="AIzaSyCsq1kD38v4vTWp5d8qm4JdgT6o1upaXF0"></firebase-app>
+
+    <firebase-auth id="auth" user="{{loggedUser}}"></firebase-auth>
+
+    <firebase-query
+      id="query"
+      path="users/{{loggedUser.uid}}/data"
+      data="{{user_data}}"></firebase-query>
+
+    <firebase-query
+      id="queryCursadas"
+      path="cartelera"
+      data="{{cursadas_data}}"></firebase-query>
+
+    <template is="dom-if" if="[[loggedUser]]">
+      <app-drawer-layout fullbleed>
+        <!-- Drawer content -->
+        <app-drawer>
+          <div style="height: 100%;background-image:url(../images/bg.png)">
+            <div class="user_data">
+              <div style="padding:5px">
+                <iron-image src="[[user.photoUrl]]" id="photoUrl" sizing="cover" class="iron-image"></iron-image>
+                <div style="font-weight:bold">
+                  [[loggedUser.displayName]]
+                </div>
+                <div class="">
+                  [[loggedUser.email]]
+                </div>
+              </div>
+            </div>
+            <iron-selector selected="[[page]]" attr-for-selected="name" class="drawer-list" role="navigation">
+              <div>
+                <paper-button on-tap="_goCambiarMaterias" id="cambiar_materias" disabled>
+                  <iron-icon icon="swap-horiz" style="margin-right:5px"></iron-icon>
+                  Cambiar materias
+                </paper-button>
+              </div>
+<!--
+              <div>
+                <paper-button on-tap="_goSugerencias" id="sugerencias">
+                  <iron-icon icon="assignment" style="margin-right:5px"></iron-icon>
+                  Sugerencias
+                </paper-button>
+              </div>
+              <div>
+                <paper-button on-tap="_goFaq" id="faq">
+                  <iron-icon icon="help" style="margin-right:5px"></iron-icon>
+                  Ayuda
+                </paper-button>
+              </div>
+-->
+              <div>
+                <paper-button on-tap="logout">
+                  <iron-icon icon="power-settings-new" style="margin-right:5px"></iron-icon>
+                  Cerrar sesion
+                </paper-button>
+              </div>
+            </iron-selector>
+          </div>
+        </app-drawer>
+
+        <!-- Main content -->
+        <app-header-layout has-scrolling-region>
+
+          <app-header effect="waterfall" fixed>
+            <app-toolbar>
+              <paper-icon-button icon="menu" drawer-toggle></paper-icon-button>
+              Cartelera Diaria
+            </app-toolbar>
+          </app-header>
+
+          <main>
+            <iron-pages
+                selected="{{page}}"
+                attr-for-selected="name"
+                fallback-selection="view404"
+                role="main">
+              <config-materias name="config-materias"></config-materias>
+              <ver-cursadas name="ver-cursadas"></ver-cursadas>
+              <sugerencias name="sugerencias"></sugerencias>
+              <spinner name="spinner"></spinner>
+              <view404 name="view404"></view404>
+            </iron-pages>
+          </main>
+
+          <paper-fab id="button_go" icon="check" on-tap="_goToCursadas"></paper-fab>
+
+        </app-header-layout>
+      </app-drawer-layout>
+    </template>
+
+    <template is="dom-if" if="[[!loggedUser]]">
+      <my-login></my-login>
+    </template>
+
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'my-app',
+
+      // Properties (Objects)
+      properties: {
+        // Current page
+        page: {
+          type: String,
+          reflectToAttribute: true,
+          observer: '_pageChanged'
+        },
+        // Data retrieved from Google when user is logged
+        loggedUser: {
+          type: Object
+        },
+        // User object to store data
+        user: {
+          type: Object,
+          value: {
+            "photoUrl":"",
+            "cursadas":[]
+          }
+        },
+        // All the daily signatures schedule
+        cursadas_data: {
+          type: Object
+        },
+        // Current user Db data
+        user_data: {
+          type: Object
+        },
+        // Local storage data
+        currentUserData: {
+          type:Array,
+          value: {}
+        }
+      },
+
+      // Observers ---------------------------------
+      observers: [
+        '_routePageChanged(routeData.page)',
+        '_userLoginData(loggedUser.*)',
+        '_userDbData(user_data.*)'
+      ],
+      _userLoginData: function(data) {
+        if (data.value != null) {
+          // Save photoUrl in user object
+          this.set('user.photoUrl',data.base.photoURL)
+        }
+      },
+      _routePageChanged: function(page) {
+        this.page = page || 'config-materias';
+      },
+      _userDbData: function(data) {
+        if (data.base.length != 0) {
+          this._routePageChanged('ver-cursadas');
+          this.$$('#button_go').style.display = 'none';
+          this.$$('#cambiar_materias').disabled = false;
+        }
+      },
+
+      // Routing functions -------------------------
+      _mainPage: function() {
+        this.page === 'ver-cursadas';
+      },
+      _pageChanged: function(page) {
+        // Load page import on demand. Show 404 page if fails
+        var resolvedPageUrl = this.resolveUrl(page + '.html');
+        this.importHref(resolvedPageUrl, null, this._showPage404, true);
+      },
+      _showPage404: function() {
+        this.page = 'view404';
+      },
+
+      // Actions to perform after signatures setup
+      _goToCursadas: function() {
+        if (this._checkFields()) {
+          let ciudad = this.$$('config-materias').ciudad_elegida;
+          let user_cursadas = this.$$('config-materias').cursadas;
+          var fecha = this.cursadas_data[0].$val;
+          for (var i = 0; i < this.cursadas_data.length; i++) {
+            if (this.cursadas_data[i].$key === ciudad) {
+              let cursadas = this.cursadas_data[i];
+              for (var m = 0; m < cursadas.length; m++) {
+                if (user_cursadas.indexOf(cursadas[m].materia) != -1) {
+                  this.push('user.cursadas',cursadas[m])
+                }
+              }
+            }
+          }
+          this.$.query.ref.push({
+            ciudad: ciudad,
+            fecha: fecha,
+            cursadas: user_cursadas
+          });
+          // TODO fix routing
+          this._routePageChanged('ver-cursadas');
+          this.$$('#button_go').style.display = 'none';
+          this.$$('#cambiar_materias').disabled = false;
+        }
+      },
+
+      // Actions to perform when going to change signatures
+      _goCambiarMaterias: function() {
+        this._routePageChanged('config-materias');
+        this.$.query.ref.remove();
+        this.user.cursadas = [];
+        this.$$('#button_go').style.display = 'initial';
+        this.$$('#cambiar_materias').disabled = true;
+        this.$$('config-materias').$.materias_combo_box.value = "";
+      },
+
+      _goSugerencias: function() {
+        this._routePageChanged('sugerencias')
+      },
+
+      // Verify whether all fields has data set
+      _checkFields: function() {
+        if (this.$$('config-materias').ciudad_elegida != "" && this.$$('config-materias').cursadas.length != 0) {
+          this.$$('config-materias').$.error_ciudad.style.display = 'none';
+          this.$$('config-materias').$.error_materias.style.display = 'none';
+          return true;
+        } else {
+          if (this.$$('config-materias').ciudad_elegida == "") {
+            this.$$('config-materias').$.error_ciudad.style.display = 'block'
+          } else {
+            this.$$('config-materias').$.error_ciudad.style.display = 'none'
+          }
+          if (this.$$('config-materias').cursadas.length == 0) {
+            this.$$('config-materias').$.error_materias.style.display = 'block'
+          } else {
+            this.$$('config-materias').$.error_materias.style.display = 'none'
+          }
+          return false;
+        }
+      },
+
+      // Log out from application
+      logout: function() {
+        this.$.auth.signOut();
+      },
+    });
+  </script>
+</dom-module>

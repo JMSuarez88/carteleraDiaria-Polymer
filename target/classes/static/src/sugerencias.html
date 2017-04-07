@@ -1,0 +1,31 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="sugerencias">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+
+    <firebase-query
+      id="query_sugerencias"
+      path="sugerencias/{{loggedUser.uid}}"
+      data="{{sugerencias}}"></firebase-query>
+      sfddfdfsdfsd
+    <paper-button raised>Just fuckin do it</paper-button>
+
+    <script>
+      Polymer: ({
+        is: 'sugerencias',
+
+        properties: {
+          sugerencia: {
+            type: Object
+          }
+        }
+      });
+    </script>
+
+  </template>
+</dom-module>

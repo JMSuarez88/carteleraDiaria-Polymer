@@ -1,0 +1,183 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<!-- Iron Elements -->
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+
+<!-- Paper Elements -->
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-autocomplete/paper-autocomplete.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<!-- Vaadin Elements -->
+<link rel="import" href="../bower_components/vaadin-combo-box/vaadin-combo-box.html">
+
+
+<dom-module id="config-materias">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px
+      }
+
+      .list-item {
+        padding: 5px 3px 5px 3px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        font-size: 18px;
+      }
+
+      iron-list {
+        vertical-align: top;
+        margin-top:10px;
+        height: 100%
+      }
+
+      .error_message {
+        font-size: 15px;
+        color:#EF2929
+      }
+
+      paper-button {
+        width:calc(50% - 30px);
+        font-weight: bold;
+        font-size: 16px;
+        background-color: #00A7DA;
+        color:white
+      }
+
+      vaadin-combo-box {
+        text-align: left;
+        margin-left: 22px;
+        margin-right: 22px;
+      }
+
+    </style>
+
+    <!-- Carga todas las materias dentro del Array 'materias' -->
+    <iron-ajax auto url="../data/materias_list.json" handle-as="json" last-response="{{materias_lista}}"></iron-ajax>
+
+    <firebase-auth user="{{user}}"</firebase-auth>
+
+    <firebase-query
+      id="query"
+      path="users/{{loggedUser.uid}}/data"
+      data="{{user_data}}"></firebase-query>
+
+    <div style="text-align:center;font-size:18px">
+      ¿En que ciudad cursas?
+      <div class="error_message" id="error_ciudad" style="display:none">
+        Hay que elegir una ciudad.
+      </div>
+      <div style="margin-top:15px">
+        <paper-button id="junin" on-tap="addCiudad">Junin</paper-button>
+        <paper-button id="pergamino" on-tap="addCiudad">Pergamino</paper-button>
+      </div>
+    </div>
+
+    <div style="text-align:center;font-size:18px;margin-top:20px">
+      ¿Qué materias estás cursando?
+      <div class="error_message" id="error_materias" style="display:none">
+        Hay que elegir una materia.
+      </div>
+      <div style="margin-top:-20px">
+        <vaadin-combo-box id="materias_combo_box"
+            noLabelFloat="true"
+            item-label-path="name"
+            item-value-path="name"
+            on-value-changed="addMateria"
+            items="{{materias_lista}}"></vaadin-combo-box>
+      </div>
+    </div>
+
+    <iron-list items={{cursadas}} as="materia">
+      <template>
+        <div class="list-item"><paper-icon-button icon="clear" on-tap="deleteItem"></paper-icon-button>[[materia]]</div>
+      </template>
+    </iron-list>
+
+  </template>
+
+  <script>
+    Polymer({
+      is: 'config-materias',
+
+      properties: {
+        // En este Array guardamos todas las materias que se puedan elegir
+        materias_lista: {
+          type: Array,
+          value: []
+        },
+        // En este Array guardamos las materias que el usuario elige
+        cursadas: {
+          type: Array,
+          value: []
+        },
+        ciudad_elegida: {
+          type: String,
+          value: ""
+        },
+        user_data: {
+          type: Object
+        }
+      },
+
+      observers: [
+      ],
+
+      // Se ejecuta cada vez que se selecciona un elemento del combo-box
+      addMateria: function(event) {
+        // El nombre de la materia que se va a guardar en 'cursadas'
+        var materia = event.detail.value.toLowerCase();
+
+        // Si materia no es "" y no existe en el Array (-1)
+        if (materia != "" && this.cursadas.indexOf(materia) === -1) {
+          // Agregamos la materia al Array, esto se actualiza solo si se usa el push()
+          this.push('cursadas',materia);
+        }
+      },
+
+      addCiudad: function(event) {
+        // El nombre de la materia que se va a guardar en 'cursadas'
+        //var ciudad = event.detail.value.toLowerCase();
+        var ciudad = event.detail.sourceEvent.currentTarget.id;
+
+        if (event.detail.sourceEvent.currentTarget == this.$$('#junin')) {
+          this.$$('#pergamino').style.backgroundColor="#00A7DA";
+          this.$$('#junin').style.backgroundColor="#73D216";
+        } else {
+          this.$$('#junin').style.backgroundColor="#00A7DA";
+          this.$$('#pergamino').style.backgroundColor="#73D216";
+        }
+
+        event.detail.sourceEvent.currentTarget.style.backgroundColor="#73D216";
+        // Si materia no es "" y no existe en el Array (-1)
+        if (ciudad != "" && this.cursadas.indexOf(ciudad) === -1) {
+          // Agregamos la materia al Array, esto se actualiza solo si se usa el push()
+          this.ciudad_elegida = ciudad;
+        }
+      },
+
+      // Elimina la materia que queramos sacar de la lista 'materias elegidas'
+      deleteItem: function(event) {
+        var materia = event.model._children[1].innerText.toLowerCase();
+        this.splice("cursadas",this.cursadas.indexOf(materia),1);
+      },
+
+      // Vacia la lista 'materias elegidas'
+      clearList: function() {
+        // Vaciamos el Array por lo que la lista vuelve a quedar en blanco
+        this.cursadas = [];
+      },
+
+    });
+  </script>
+</dom-module>

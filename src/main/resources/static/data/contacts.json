@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Introducción al Algebra",
+    "sede": "Eva Peron",
+    "horario": "19:00 a 22:00 hs",
+    "profesor": "Malcom X",
+    "comicion": "COM 1"
+  },
+  {
+    "name": "Programacion Imperativa",
+    "sede": "Eva Peron",
+    "horario": "19:00 a 22:00 hs",
+    "profesor": "Malcom X",
+    "comicion": "COM 2"
+  },
+  {
+    "name": "Base de Datos I",
+    "sede": "Eva Peron",
+    "horario": "19:00 a 22:00 hs",
+    "profesor": "Malcom X",
+    "comicion": "COM 3"
+  },
+  {
+    "name": "Introduccion a Objetos",
+    "sede": "Eva Peron",
+    "horario": "19:00 a 22:00 hs",
+    "profesor": "Malcom X",
+    "comicion": "COM 4"
+  }
+]

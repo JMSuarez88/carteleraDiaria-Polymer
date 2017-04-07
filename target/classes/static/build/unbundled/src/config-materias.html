@@ -1,0 +1,108 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+--><html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+<!-- Iron Elements -->
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+
+<!-- Paper Elements -->
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-autocomplete/paper-autocomplete.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<!-- Vaadin Elements -->
+<link rel="import" href="../bower_components/vaadin-combo-box/vaadin-combo-box.html">
+
+
+</head><body><dom-module id="config-materias">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px
+      }
+
+      .list-item {
+        padding: 5px 3px 5px 3px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        font-size: 18px;
+      }
+
+      iron-list {
+        vertical-align: top;
+        margin-top:10px
+      }
+
+      .error_message {
+        font-size: 10px;
+        color:#EF2929
+      }
+
+      paper-button {
+        width:calc(50% - 30px);
+        font-weight: bold;
+        font-size: 16px;
+        background-color: #00A7DA;
+        color:white
+      }
+
+      vaadin-combo-box {
+        text-align: left;
+        margin-left: 22px;
+        margin-right: 22px;
+      }
+
+    </style>
+
+    <!-- Carga todas las materias dentro del Array 'materias' -->
+    <iron-ajax auto="" url="../data/materias_list.json" handle-as="json" last-response="{{materias_lista}}"></iron-ajax>
+
+    <firebase-auth user="{{user}}" <="" firebase-auth="">
+
+    <firebase-query id="query" path="users/{{user.uid}}/cursadas" data="{{cursadas}}"></firebase-query>
+
+    <div style="text-align:center;font-size:18px">
+      ¿En que ciudad cursas?
+      <div class="error_message" id="error_ciudad" style="display:none">
+        Hay que elegir una ciudad.
+      </div>
+      <div style="margin-top:15px">
+        <paper-button id="Junin" on-tap="addCiudad">Junin</paper-button>
+        <paper-button id="Pergamino" on-tap="addCiudad">Pergamino</paper-button>
+      </div>
+    </div>
+
+    <!--
+    <vaadin-combo-box id="materias_combo_box"
+        label="¿En qué ciudad cursas?"
+        always-float-label
+        on-value-changed="addCiudad"
+        items="[[ciudades]]"></vaadin-combo-box>
+    -->
+
+    <div style="text-align:center;font-size:18px;margin-top:20px">
+      ¿Qué materias estás cursando?
+      <div class="error_message" id="error_materias" style="display:none">
+        Hay que elegir una materia.
+      </div>
+      <div style="margin-top:-20px">
+        <vaadin-combo-box id="materias_combo_box" nolabelfloat="true" item-label-path="name" item-value-path="name" on-value-changed="addMateria" items="{{materias_lista}}"></vaadin-combo-box>
+      </div>
+    </div>
+
+    <iron-list items="{{cursadas}}" as="materia">
+      <template>
+        <div class="list-item"><paper-icon-button icon="clear" on-tap="deleteItem"></paper-icon-button>[[materia]]</div>
+      </template>
+    </iron-list>
+
+  </firebase-auth></template>
+
+  <script>Polymer({is:"config-materias",properties:{materias_lista:{type:Array,value:[]},cursadas:{type:Array,value:[]},ciudades:{type:Array,value:["Junin","Pergamino"]},ciudad_elegida:{type:String,value:""}},addMateria:function(e){var a=e.detail.value.toLowerCase();""!=a&&this.cursadas.indexOf(a)===-1&&this.push("cursadas",a)},addCiudad:function(e){var a=e.detail.sourceEvent.currentTarget.id;e.detail.sourceEvent.currentTarget==this.$$("#Junin")?(this.$$("#Pergamino").style.backgroundColor="#00A7DA",this.$$("#Junin").style.backgroundColor="#73D216"):(this.$$("#Junin").style.backgroundColor="#00A7DA",this.$$("#Pergamino").style.backgroundColor="#73D216"),e.detail.sourceEvent.currentTarget.style.backgroundColor="#73D216",""!=a&&this.cursadas.indexOf(a)===-1&&(this.ciudad_elegida=a)},deleteItem:function(e){var a=e.model._children[1].innerText.toLowerCase();this.splice("cursadas",this.cursadas.indexOf(a),1)},clearList:function(){this.cursadas=[]}});</script>
+</dom-module>
+</body></html>

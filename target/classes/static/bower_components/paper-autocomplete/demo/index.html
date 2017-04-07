@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <title>paper-autocomplete demo</title>
+  <script src="../../webcomponentsjs/webcomponents-lite.min.js"></script>
+
+  <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+  <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+  <link rel="import" href="../../paper-toast/paper-toast.html">
+  <link rel="import" href="../../elliptical-sass/elliptical-sass.html">
+  <link rel="import" href="../../css-docs/css-docs.html">
+  <link rel="import" href="../paper-autocomplete.html">
+  <link rel="import" href="./autocomplete-example.html">
+
+  <link rel="stylesheet" href="demo.css">
+
+  <style is="custom-style" include="demo-pages-shared-styles">
+    .vertical-section-container {
+      max-width: 600px;
+    }
+  </style>
+</head>
+
+<body unresolved>
+
+<div class="vertical-section-container centered">
+  <h3>Local Data-Source Binding</h3>
+  <p>
+    Directly bind a local array to paper-autocomplete. The component internally will filter suggestions based on the
+    component attribute settings.
+  </p>
+
+  <blockquote class="info">
+    <span class="bold">LOCAL DATA BINDING</span><br>
+    <div>
+      The component internally remaps the passed array to the template binding array (which will be an array of objects
+      with a `text` and `value` properties). The passed array can be a simple array of strings.
+    </div>
+    <br>
+    <div>
+      Public properties, `textProperty` and `valueProperty`, can be declaratively set in the element attributes,
+      allowing to bind an arbitrary object array to the component's <span class="bold">source</span> property.
+    </div>
+  </blockquote>
+
+  <demo-snippet>
+    <template is="dom-bind">
+      <autocomplete-example>
+        <!-- autocomplete-example is used just to do paper-autocomplete.source = states; -->
+        <paper-autocomplete label="Select State" id="input-local" no-label-float="true"></paper-autocomplete>
+      </autocomplete-example>
+    </template>
+  </demo-snippet>
+
+  <h3>Remote Data-Source Binding</h3>
+  <p>
+    Remote bind to the github user api. Remote data binding delegates the responsibility of filtering the data source to
+    the calling app. Set a listener for the <span class="bold">autocomplete.change</span> event and pass the suggestions
+    back to the component. The change event is fired based on the <span class="bold">min-length</span> attribute
+    setting.
+  </p>
+
+  <blockquote class="warning">
+    <span class="bold">REMOTE DATA BINDING</span><br>
+    <div>
+      The filtered suggestions is expected to be mapped to an array of text/value pairs before being passed to the
+      component.
+    </div>
+  </blockquote>
+
+  <demo-snippet>
+    <template is="dom-bind">
+
+      <paper-autocomplete label="Select User"
+                          id="input-remote"
+                          remote-source="true"
+                          min-length="2"></paper-autocomplete>
+
+      <script>
+        document.querySelector('#input-remote').addEventListener('autocomplete-selected', onSelect);
+        document.querySelector('#input-remote').addEventListener('autocomplete-change', onChange);
+
+        function onSelect(event) {
+          var paperToast = document.querySelector('paper-toast');
+          var selected = event.detail.text;
+          paperToast.text = 'Selected: ' + selected;
+          paperToast.show();
+        }
+
+        function onChange(event) {
+          var input = document.querySelector('#input-remote');
+          var search = event.detail.option.text;
+          var url = 'https://api.github.com/search/users?q=' + search + '+in:login';
+          var req = new XMLHttpRequest();
+          req.open('GET', encodeURI(url));
+          req.onload = function () {
+            if (req.status === 200) {
+              var data = JSON.parse(req.response);
+              var arr = data.items.map(function (obj) {
+                return {text: obj.login, value: obj.login};
+              });
+              input.suggestions(arr);
+            }
+          };
+          req.send();
+        }
+      </script>
+    </template>
+  </demo-snippet>
+
+  <h3>Remote Data-Source Binding with Custom Text & Value properties</h3>
+  <p>
+    Remote bind to the github user api. Remote data binding delegates the responsibility of filtering the data source to
+    the calling app. Set a listener for the <span class="bold">autocomplete.change</span> event and pass the suggestions
+    back to the component. The change event is fired based on the <span class="bold">min-length</span> attribute
+    setting.
+  </p>
+
+  <demo-snippet>
+    <template is="dom-bind">
+
+      <paper-autocomplete label="Select User"
+                          id="input-remote-custom-properties"
+                          text-property="login"
+                          value-property="id"
+                          min-length="2"
+                          remote-source>
+      </paper-autocomplete>
+
+      <script>
+        document.querySelector('#input-remote-custom-properties').addEventListener('autocomplete-selected', onCustomSelect);
+        document.querySelector('#input-remote-custom-properties').addEventListener('autocomplete-change', onCustomChange);
+
+        function onCustomSelect(event) {
+          var paperToast = document.querySelector('paper-toast');
+          var selected = event.detail.text;
+          paperToast.text = 'Selected: ' + selected + ' with a value ' + event.detail.value;
+          paperToast.show();
+        }
+
+        function onCustomChange(event) {
+          var input = document.querySelector('#input-remote-custom-properties');
+          var search = event.detail.option.text;
+          var url = 'https://api.github.com/search/users?q=' + search + '+in:login';
+          var req = new XMLHttpRequest();
+          req.open('GET', encodeURI(url));
+          req.onload = function () {
+            if (req.status === 200) {
+              var data = JSON.parse(req.response);
+              input.suggestions(data.items);
+            }
+          };
+          req.send();
+        }
+      </script>
+    </template>
+  </demo-snippet>
+</div>
+
+<paper-toast></paper-toast>
+</body>
+</html>

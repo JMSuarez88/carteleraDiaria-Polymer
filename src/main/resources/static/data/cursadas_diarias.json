@@ -1,0 +1,105 @@
+{
+  "cartelera" : {
+    "fecha" : "15/02/2017",
+    "junin" : {
+      "0" : {
+        "materia" : "introduccion al algebra",
+    		"comision" : "com 1",
+    		"tipo" : "practica",
+    		"hora" : "16:00 a 19:00",
+        "edificio" : "rivadavia",
+    		"profesores" : "profesor 1,profesor 2"
+      },
+      "1" : {
+        "materia" : "comunicacion de datos",
+    		"comision" : "com 2",
+    		"tipo" : "practica",
+    		"hora" : "19:00 a 22:00",
+        "edificio" : "rivadavia",
+    		"profesores" : "profesor 1,profesor 2"
+      },
+      "2" : {
+        "materia" : "algebra y geometria analitica",
+    		"comision" : "com 1",
+    		"tipo" : "teoria",
+    		"hora" : "10:00 a 13:00",
+        "edificio" : "sarmiento",
+    		"profesores" : "profesor 3,profesor 4"
+      },
+      "3" : {
+        "materia" : "estructura de datos",
+    		"comision" : "com 2",
+    		"tipo" : "teoria",
+    		"hora" : "08:00 a 11:00",
+        "edificio" : "sariento",
+    		"profesores" : "profesor 3,profesor 4"
+      }
+    },
+    "pergamino" : {
+      "0" : {
+        "materia" : "analisis matematico basico",
+    		"comision" : "com 3",
+    		"tipo" : "practica",
+    		"hora" : "08:00 a 11:00",
+        "edificio" : "ecana",
+    		"profesores" : "profesor 5,profesor 6"
+      },
+      "1" : {
+        "materia" : "sistemas y organizaciones",
+    		"comision" : "com 2",
+    		"tipo" : "teoria",
+    		"hora" : "08:00 a 11:00",
+        "edificio" : "ecana",
+    		"profesores" : "profesor 5,profesor 6"
+      },
+      "2" : {
+        "materia" : "analisis matematico aplicado",
+    		"comision" : "com 4",
+    		"tipo" : "teoria",
+    		"hora" : "13:00 a 16:00",
+        "edificio" : "inta",
+    		"profesores" : "profesor 7,profesor 8"
+      },
+      "3" : {
+        "materia" :"introduccion al algebra",
+    		"comision" : "com 4",
+    		"tipo" : "teoria",
+    		"hora" : "13:00 a 16:00",
+        "edificio" : "inta",
+    		"profesores" : "profesor 7,profesor 8"
+      },
+      "4" : {
+        "materia" : "analisis matematico vectorial",
+    		"comision" : "com 5",
+    		"tipo" : "practica",
+    		"hora" : "21:00 a 00:00",
+        "edificio" : "matilde",
+    		"profesores" : "profesor 9,profesor 10"
+      },
+      "5" : {
+        "materia" : "ingles tecnico",
+    		"comision" : "com 5",
+    		"tipo" : "practica",
+    		"hora" : "21:00 a 00:00",
+        "edificio" : "matilde",
+    		"profesores" : "profesor 9,profesor 10"
+      },
+      "6" : {
+        "materia" : "programacion orientada a objetos",
+    		"comision" : "com 6",
+    		"tipo" : "teoria",
+    		"hora" : "12:00 a 15:00",
+        "edificio" : "monteagudo",
+    		"profesores" : "profesor 11,profesor 12"
+      },
+      "7" : {
+        "materia" : "introduccion a objetos",
+    		"comision" : "com 6",
+    		"tipo" : "teoria",
+    		"hora" : "12:00 a 15:00",
+        "edificio" : "monteagudo",
+    		"profesores" : "profesor 11,profesor 12"
+      }
+    }
+  }
+}
