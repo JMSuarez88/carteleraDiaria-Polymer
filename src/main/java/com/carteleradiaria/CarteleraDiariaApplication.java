@@ -28,29 +28,34 @@ public class CarteleraDiariaApplication {
 		SpringApplication.run(CarteleraDiariaApplication.class, args);
 	}
 
+	// todo: esto está tirando un error: "No TaskScheduler/ScheduledExecutorService bean found for scheduled processing"
 	@Scheduled(fixedDelay=10000)
 	public void start() {
 		logger.info("-------------------------------------------");
 		logger.info("\u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620");
+
 		// Reseteamos las listas con cada ejecución
 		this.junin = new ArrayList<>();
 		this.pergamino = new ArrayList<>();
-		// La fecha actual. La formateamos a ddMMYYYY para usarla en la URL de los pdf
+
+		// La fecha actual
+		// La formateamos a ddMMYYYY para usarla en la URL de los pdf
 		Date date = new Date();
 		PdfManager pdfManager = new PdfManager();
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMYYYY");
 
 		// Analizamos el PDF de cada sede
 		for (String s : sedes) {
+
 			// Creamos un objeto Sede con todas las cursadas del día por aula
-			//Sede sede = pdfManager.analizeSedeData(s,simpleDateFormat.format(date));
-			Sede sede = pdfManager.analizeSedeData(s,"09092017");
+			Sede sede = pdfManager.analizeSedeData(s,simpleDateFormat.format(date));
+
 			// Actualizamos las listas Junin/Pergamino según corresponda
 			actualizarListas(sede);
+
 			// Actualizamos la base de datos en Firebase
 			actualizarFirebase();
 		}
-		//actualizarListas(pdfManager.analizeSedeData("anexo","09092017"));
 	}
 
 	/**
@@ -66,6 +71,7 @@ public class CarteleraDiariaApplication {
 
 		// Recorremos todas las aulas
 		for (Map.Entry entry : sede.cursadas.entrySet()) {
+
 			// Guardamos las cursadas del aula
 			String value = entry.getValue().toString();
 
@@ -73,6 +79,7 @@ public class CarteleraDiariaApplication {
 			if (!value.isEmpty()) {
 				// Creamos array de cursadas
 				for (String s : value.split("&")) {
+
 					try {
 						// Separamos nombre y hora de cada cursada
 						nombre = s.substring(0,s.indexOf(":00")-2).trim();
@@ -98,8 +105,10 @@ public class CarteleraDiariaApplication {
 							pergamino.add(cursada);
 						}
 					}
+
 				}
 			}
+
 		}
 	}
 
