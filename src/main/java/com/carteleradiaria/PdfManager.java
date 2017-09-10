@@ -1,19 +1,14 @@
 package com.carteleradiaria;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Pattern;
-
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.io.RandomAccessRead;
-import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.PDFTextStripper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by kaotiks on 10/08/16.
@@ -23,228 +18,215 @@ public class PdfManager {
 
     // Variables
     private static final Pattern DIACRITICS_AND_FRIENDS = Pattern.compile("[\\p{InCombiningDiacriticalMarks}\\p{IsLm}\\p{IsSk}]+");
-    private String patternHourDouble = "\r\n[0-9][0-9]:";
-    private String patternHourSimple = "\r\n[0-9]:";
-    private FileHandler fileHandler = new FileHandler();
-    private PDFParser parser;
-    private PDFTextStripper pdfStripper;
-    private PDDocument pdDoc ;
-    private COSDocument cosDoc ;
-    private String Text ;
-    private File file;
-
-    // todo: variables Nuevas
-
-
+    private final String path = "http://www.unnoba.edu.ar/cursadas/archivo/";
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // Constructor
     public PdfManager() {}
 
-
-    // Esto lee el PDF en un solo String
-    private String toText() throws IOException
+    /**
+     *  Busca el pdf en la URL que pasamos como parametro y lo devuelve como String
+     *
+     *  @param url   La URL del pdf que queremos convertir a String
+     *  @return      Un String con la data del pdf
+     */
+    private String toText(String url) throws IOException
     {
-        this.pdfStripper = null;
-        this.pdDoc = null;
-        this.cosDoc = null;
+        try {
+            PDFTextStripper pdfStripper = new PDFTextStripper();
+            PDDocument pdDoc = PDDocument.load(new URL(url));
+            String textResult = pdfStripper.getText(pdDoc);
+            pdDoc.close();
 
-        parser = new PDFParser(new FileInputStream(file));
-
-        parser.parse();
-        cosDoc = parser.getDocument();
-        pdfStripper = new PDFTextStripper();
-        pdDoc = new PDDocument(cosDoc);
-        pdDoc.getNumberOfPages();
-        //pdfStripper.setStartPage(1);
-        //pdfStripper.setEndPage(1);
-
-        // if you want to get text from full pdf file use this code
-        // pdfStripper.setEndPage(pdDoc.getNumberOfPages());
-
-        Text = pdfStripper.getText(pdDoc);
-        return Text;
-    }
-
-    public void setFile(File file){
-        this.file = file;
-    }
-
-    public Sede getAnalizedData(String sedeNombre, String fecha){
-        this.file = fileHandler.downloadFile(sedeNombre,fecha,sedeNombre);
-        //todo : varibles nuevas;
-        Sede sede = new Sede();
-
-        try{
-            String file = stripDiacritics(this.toText().toLowerCase());
-            // todo: return
-            this.cleanSource(file);
-            return sede;
-        } catch (Exception e){
-            e.printStackTrace();
-            return null;
+            return textResult;
+        } catch (Exception e) {
+            logger.error("Archivo pdf inexistente");
+            return "";
         }
     }
 
-    private Map<String,String> cleanSource(String source){
-        //Map<Integer,String> source1 = analizePdfCartelera(source.substring(source.indexOf("22:00")+5));
-        //Map<String,String> result = analizePdfCartelera(source.substring(source.indexOf("22:00")+5));
+    /**
+     *  Desde acá se manda a analizar cada PDF según sede
+     *
+     *  @param sedeNombre   Nombre de la sede según pdf (anexo, evaperon, etc)
+     *  @param fecha        La fecha actual en formato ddMMYYYY (ej.: 10092017)
+     *  @return             Un objeto Sede con todas las cursadas por aula
+     */
+    public Sede analizeSedeData(String sedeNombre, String fecha){
+        String pdfText;
+        Map<String,String> sedeData = new HashMap<>();
+        Sede sede = new Sede(sedeNombre);
+        // Logueamos cada sede que analizamos
+        logger.info("-------------------------------------------");
+        logger.info("SEDE: " + sede.getNombre());
+        logger.info("CIUDAD: " + sede.getCiudad());
+
+        try {
+            // Pasamos a String el pdf
+            pdfText = this.toText(path + sedeNombre + fecha + ".pdf");
+            // Limpiamos el string quitando acentos y demases
+            pdfText = stripDiacritics(pdfText.toLowerCase());
+
+            if (!pdfText.isEmpty()) {
+                // Mandamos a analizar el String
+                sedeData = this.analizePdf(pdfText);
+                logger.info("OK ;)");
+            } else {
+                logger.error("No hay datos para analizar");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        sede.setCursadas(sedeData);
+        return sede;
+    }
+
+    /**
+     *  Desde acá se manda a analizar cada PDF
+     *
+     *  @param source   El pdf que convertimos a String
+     *  @return         Un Map con todas las cursadas por aula
+     */
+    private Map<String,String> analizePdf(String source){
         try {
           return analizePdfCartelera(source.substring(source.indexOf("22:00")+5));
         } catch (Exception e) {
           e.printStackTrace();
           return null;
         }
-
-        // todo
     }
 
-    // Parsea la info del PDF de las carteleras diarias
+    /**
+     *  Parsea la info del PDF de las carteleras diarias
+     *
+     *  @param s   El String que se va a parsear
+     *  @return    Un Map con todas las cursadas por aula
+     */
     private Map<String,String> analizePdfCartelera(String s){
-        Sede sede = new Sede();
         String source = "";
         String[] aux1;
         Map<String,String> aulas = new TreeMap<String, String>();
-        //Map<Integer, String> aulas = new TreeMap<Integer, String>();
 
+        // Empezamos recorriendo el String completo, caracter por caracter
+        // La idea es ir pasandolo en limpio a otro String, quitando caracteres que no queremos
         for (int i=0 ; i < s.length() ; i++) {
             Character c = s.charAt(i);
 
             try {
+                // A este no lo queremos
                 if(c == '\n')
                     continue;
 
+                // Verifica si a continuación del caracter actual viene el nombre de algún aula
                 if (esAula(s,i)) {
+                    // Pasamos un espacio antes del nombre del aula al nuevo String
                     source += " ";
                     continue;
                 }
 
-                if(s.substring(i, i +16).equals("\r\nlaboratorio de")
+                // Esto debe ser necesario para no perder el nombre completo del aula
+                if (s.substring(i, i +16).equals("\r\nlaboratorio de")
                         || s.substring(i, i +10).equals("\r\n1er piso")){
+                    // Pasamos el caracter al nuevo String
                     source += c;
                     continue;
                 }
 
+                // Pasamos el caracter al nuevo String
                 source += c;
             } catch (Exception e) {
+                // Nos agarro la Exception, estamos al final del String original
                 while(i < s.length()){
+                    // Estos dos caracteres no los queremos pasar al final del String
                     if(s.charAt(i) == '\n' || s.charAt(i) == '\r') {
                         i += 1;
                         continue;
                     }
+                    // Pasamos el caracter al nuevo String
                     source += s.charAt(i);
                     i += 1;
                 }
             }
         }
 
+        // Creamos un array spliteando el String que pasamos en limpio
         aux1 = source.split("\r");
 
-        String key = null;
-        //Integer key = null;
+        // La 'key' del Map
+        String aula = null;
+        // El 'value' del Map
         String value = "";
 
+        // Recorremos el array que creamos recién
+        // En este punto es donde se empieza a hacer toda el parseo para armar el Map que tenemos que devolver
         for(int i=0 ; i < aux1.length ; i++){
             String s1 = aux1[i].trim();
 
+            // Si el elemento actual es un String vacío, lo ignoramos
             if (s1.trim().equals(""))
                 continue;
+            // Si es el nombre de un aula, analizamos y agregamos el aula
             if (esAula(s1)){
-                //key = toInteger(s1);
                 if(s1.contains("sala de profesores")){
-                    key = s1.substring(0,s1.indexOf(":"));
-                    //key = toInteger(s1.substring(0,s1.indexOf(":")+1));
+                    aula = s1.substring(0,s1.indexOf(":"));
                     value = s1.substring(s1.indexOf(":")+2);
-                    aulas.put(key,value);
+                    aulas.put(aula,value);
                 } else {
                     if(s1.contains("capacidad")){
                         if(s1.contains("(")){
-                            key = s1.substring(0,s1.indexOf("(")).trim();
+                            aula = s1.substring(0,s1.indexOf("(")).trim();
                         } else {
-                            key = s1.substring(0,s1.indexOf("capacidad")).trim();
+                            aula = s1.substring(0,s1.indexOf("capacidad")).trim();
                         }
-                        //key = toInteger(s1);
-                        aulas.put(key,"");
+                        aulas.put(aula,"");
                     } else {
-                        key = s1.trim();
-                        //key = toInteger(s1);
-                        aulas.put(key,"");
+                        aula = s1.trim();
+                        aulas.put(aula,"");
                     }
                 }
+            // Si no es un aula, analizamos y terminamos de cargar los datos de las cursadas
             } else {
                 try {
                     if(esAula(aux1[i+1].trim()) || (esAula(aux1[i+2].trim())) && aux1[i+1].trim().equals("")){
-                        value = value + s1;
-                        aulas.put(key,aulas.get(key)+value);
-                        key = null;
+                        if (s1.contains(":00") || s1.contains(":30") || s1.contains("hs.")) {
+                            value = value + s1 + "&";
+                        } else {
+                            value = value + s1 + " ";
+                        }
+                        aulas.put(aula,aulas.get(aula)+value);
+                        aula = null;
                         value = "";
+                    } else {
+                        if (s1.contains(":00") || s1.contains(":30") || s1.contains("hs.")) {
+                            value = value + s1 + "&";
+                        } else {
+                            value = value + s1 + " ";
+                        }
+                    }
+                } catch (Exception e){
+                    if (s1.contains(":00") || s1.contains(":30") || s1.contains("hs.")) {
+                        value = value + s1 + "&";
                     } else {
                         value = value + s1 + " ";
                     }
-                } catch (Exception e){
-                    value = value + s1;
-                    aulas.put(key,aulas.get(key)+value);
+                    aulas.put(aula,aulas.get(aula)+value);
                     value = "";
                 }
             }
 
         }
 
-        // todo
         return aulas;
     }
 
-
-
-    // Verifica que los ultimos 5 caracteres sean dígitos
-    private Boolean lastDigits(String s){
-        Boolean result = true;
-        for (int i = s.length()-1 ; i > s.length()-2 ; --i){
-            if(!Character.isDigit(s.charAt(i))){
-                result = false;
-            }
-        }
-        return result;
-    }
-
-    private String[] parseMateriaCodigo(String s){
-        return new String[]{s.substring(0,s.length()-5),s.substring(s.length()-5,s.length())};
-    }
-
-    private Boolean ignorarLinea(String s){
-        return s.contains("universidad")
-                || s.contains("impreso")
-                || s.contains("asignatura")
-                || s.contains("habilitada")
-                || s.contains("comisiones")
-                || s.contains("cuatrimestre");
-    }
-
-    private Boolean esCursada(String s){
-        return s.toLowerCase().contains("semanal")
-                || s.toLowerCase().contains("quincenal")
-                || s.toLowerCase().contains("mensual")
-                || s.toLowerCase().contains("junin")
-                || s.toLowerCase().contains("pergamino");
-    }
-
-    private static String stripDiacritics(String str) {
-        str = Normalizer.normalize(str, Normalizer.Form.NFD);
-        str = DIACRITICS_AND_FRIENDS.matcher(str).replaceAll("");
-        return str;
-    }
-
-    private String cleanComiciones(String s){
-        String[] aux = s.split("\r");
-        String result = "";
-
-        for(int i=0 ; i < aux.length ; i++){
-            result = result + aux[i].substring(aux[i].indexOf("-")+1);
-
-        }
-
-        return null;
-    }
-
+    /**
+     *  Verifica si el String es o forma parte del nombre de un aula
+     *
+     *  @param s    El String que se va a analizar
+     *  @param i    El índice actual dentro de la iteración. Lo usamos para hacer algunas verificaciones
+     *  @return     true/false
+     */
     private Boolean esAula(String s,int i){
         return s.substring(i, i + 6).equals("\r\nplan")
                 || (s.substring(i, i + 6).equals("\r\n1er.") && (Character.isDigit(s.charAt(i-1)) || Character.isDigit(s.charAt(i-2))))
@@ -263,9 +245,17 @@ public class PdfManager {
                 || s.substring(i, i + 13).equals("\r\ninformatico")
                 || s.substring(i, i + 7).equals("\r\n“raul")
                 || s.substring(i, i + 9).equals("\r\nsala de")
-                || s.substring(i, i +15).equals("\r\ninformatica i");
+                || s.substring(i, i +15).equals("\r\ninformatica i")
+                || s.substring(i, i +18).equals("\r\narquitectura y") && s.substring(i-12).equals("laboratorio ")
+                || s.substring(i, i +21).equals("\r\nelectronica digital");
     }
 
+    /**
+     *  Verifica si el String es o forma parte del nombre de un aula
+     *
+     *  @param s    El String que se va a analizar
+     *  @return     true/false
+     */
     private Boolean esAula(String s){
         return s.contains("planta")
                 || s.contains("1er.")
@@ -282,50 +272,21 @@ public class PdfManager {
                 || s.contains("fisicoquímica")
                 || s.contains("informático")
                 || s.contains("alfonsin")
-                || s.contains("profesores");
+                || s.contains("profesores")
+                || s.contains("arquitectura y")
+                || s.contains("electronica digital");
     }
 
-    private Integer toInteger(String s){
-
-        switch (s){
-            case "aula parlante  “raul alfonsin”  planta baja":
-                return 100;
-            case "sala de profesores:":
-                return 101;
-            case "laboratorio de informatica i planta baja":
-                return 102;
-            case "laboratorio de informatica ii planta  baja":
-                return 103;
-            case "1er piso videoconferencia sala 1":
-                return 104;
-            case "1er piso videoconferencia sala 2":
-                return 105;
-        }
-
-        try {
-            return Integer.valueOf(s.substring(0,2));
-        } catch (Exception e){
-            return Integer.valueOf(s.substring(0,1));
-        }
-    }
-
-    private String[] parseMateriaHorario(String s){
-        String[] aux = s.split("hs.");
-        Map<String,String> mH = new HashMap<>();
-
-        for (int i=0 ; i < aux.length ; i++){
-            String a = aux[i].substring(0,aux[i].indexOf("hs.")).trim();
-            //String b = aux[i].substring()
-        }
-
-        return null;
+    /**
+     *  Limpia un String de acentos y ese tipo de cosas
+     *
+     *  @param str  El String que se va a limpiar
+     *  @return     El mismo String, pero limpio
+     */
+    private static String stripDiacritics(String str) {
+        str = Normalizer.normalize(str, Normalizer.Form.NFD);
+        str = DIACRITICS_AND_FRIENDS.matcher(str).replaceAll("");
+        return str;
     }
 
 }
-
-/* todo: esto de las aulas mas vale dejarlo para testing
-private final int[] AULAS_RIVADAVIA = {8,9,11,13,15,18,19,20,21,31,32,33,34,35,36,37,38}; // Falta aula parlante
-private final int[] AULAS_SARMIENTO = {1,2,3,4,5,6,7,8,10,11,12,13,15,16,17,18,19};
-private final int[] AULAS_MONTEAGUDO = {1,2,3,4,5,6,7,8,9,10,11}; // faltan aulas sin numero
-private final int[] AULAS_ECANA = {};
-private final int[] AULAS_INTA = {};*/

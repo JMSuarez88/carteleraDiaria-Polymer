@@ -1,88 +1,113 @@
 package com.carteleradiaria;
 
-import com.sun.deploy.net.HttpUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.client.HttpClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.apache.commons.*;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
-import java.io.File;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 @SpringBootApplication
+@EnableScheduling
 public class CarteleraDiariaApplication {
-
-	private String currentDate;
-	private String url;
-	private Map<String,String[]> sedes = new HashMap();
-	private UploadObject uploadObject = new UploadObject();
-	private PdfManager pdfManager = new PdfManager();
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	// El nombre de cada sede según aparece en la URL de los pdf
+	private String[] sedes = {"anexo","evaperon","monteagudo","matilde","ecana","inta"};
+	// La lista donde van a ir a parar todas las cursadas de Junin
+	private List<Cursada> junin;
+	// La lista donde van a ir a parar todas las cursadas de Pergamino
+	private List<Cursada> pergamino;
 
 	public static void main(String[] args) {
 		SpringApplication.run(CarteleraDiariaApplication.class, args);
 	}
 
-	public String getCurrentDate() {
-		// todo
-		return "";
+	@Scheduled(fixedDelay=10000)
+	public void start() {
+		logger.info("-------------------------------------------");
+		logger.info("\u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620");
+		// Reseteamos las listas con cada ejecución
+		this.junin = new ArrayList<>();
+		this.pergamino = new ArrayList<>();
+		// La fecha actual. La formateamos a ddMMYYYY para usarla en la URL de los pdf
+		Date date = new Date();
+		PdfManager pdfManager = new PdfManager();
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMYYYY");
+
+		// Analizamos el PDF de cada sede
+		for (String s : sedes) {
+			// Creamos un objeto Sede con todas las cursadas del día por aula
+			//Sede sede = pdfManager.analizeSedeData(s,simpleDateFormat.format(date));
+			Sede sede = pdfManager.analizeSedeData(s,"09092017");
+			// Actualizamos las listas Junin/Pergamino según corresponda
+			actualizarListas(sede);
+			// Actualizamos la base de datos en Firebase
+			actualizarFirebase();
+		}
+		//actualizarListas(pdfManager.analizeSedeData("anexo","09092017"));
 	}
 
-	public void setupUploadObject() {
-		Date dt = new Date();
-		SimpleDateFormat sdf = new SimpleDateFormat("ddMMyyyy");
-		this.currentDate = sdf.format(dt);
-		// todo: esto me puede llegar a traer problemas con nullPointerException!!
-		Ciudad ciudad = null;
+	/**
+	 *  Actualiza la lista de cada ciudad
+	 *
+	 *  @param sede	Un objeto sede con todas las cursadas por aula de una sede
+	 */
+	public void actualizarListas(Sede sede) {
+		Cursada cursada;
+		String hora = "";
+		String nombre = "";
+		String aula;
 
-		for (Map.Entry<String, String[]> entry : this.sedes.entrySet()) {
-			ciudad = new Ciudad(entry.getKey());
-			List<Sede> sedes = new ArrayList<>();
-	    for (String sede : entry.getValue()) {
-				if (this.isCarteleraAvailable(sede)) {
+		// Recorremos todas las aulas
+		for (Map.Entry entry : sede.cursadas.entrySet()) {
+			// Guardamos las cursadas del aula
+			String value = entry.getValue().toString();
+
+			// Si no hay cursadas, no analizamos nada
+			if (!value.isEmpty()) {
+				// Creamos array de cursadas
+				for (String s : value.split("&")) {
 					try {
-						//sedes.add(this.pdfManager.getAnalizedData(sede,this.currentDate));
+						// Separamos nombre y hora de cada cursada
+						nombre = s.substring(0,s.indexOf(":00")-2).trim();
+						hora = s.substring(nombre.length()+1).trim();
 					} catch (Exception e) {
-						e.printStackTrace();
+						try {
+							// Separamos nombre y hora de cada cursada
+							nombre = s.substring(0,s.indexOf("hs.")-2).trim();
+							hora = s.substring(nombre.length()+1,nombre.length()+4).trim();
+						} catch (Exception e1) {
+							//e.printStackTrace();
+						}
+						//e.printStackTrace();
+					}
+
+					aula = entry.getKey().toString();
+					cursada = new Cursada(sede.getNombre(),hora,nombre,aula);
+
+					if (!cursada.getNombre().isEmpty()) {
+						if (sede.getCiudad().equals("Junin")) {
+							junin.add(cursada);
+						} else {
+							pergamino.add(cursada);
+						}
 					}
 				}
 			}
-			ciudad.setSedes(sedes);
 		}
 	}
 
-	public boolean isCarteleraAvailable(String sede) {
-		// todo
-		return true;
-	}
-
-	public void analizeSede(String sede) {
-
-	}
-
-	private void updateFirebase() {
-
-	}
-
-	@org.junit.Test
-	public void test() {
-		this.pdfManager.getAnalizedData("anexo","10032017");
-
-		/*File f;
-		try {
-			URLConnection con = new URL("https://www.unnoba.edu.ar/cursadas/archivo/anexo09032017.pdf").openConnection();
-			InputStream in = con.getInputStream();
-			String encoding = con.getContentEncoding();
-			encoding = encoding == null ? "UTF-8" : encoding;
-			String body = IOUtils.toString(in, encoding);
-			System.out.println(body);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}*/
+	/**
+	 *  Actualiza la base de datos en Firebase
+	 *
+	 */
+	public void actualizarFirebase() {
 
 	}
 }

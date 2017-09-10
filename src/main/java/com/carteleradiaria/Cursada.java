@@ -1,28 +1,40 @@
 package com.carteleradiaria;
 
 public class Cursada {
-	private String comicion;
+	//private String comicion;
 	private String edificio;
 	private String hora;
 	private String nombre;
-	private String profesores;
-	private String tipo;
+	private String aula;
+	//private String profesores;
+	//private String tipo;
 	
-	public Cursada(String comicion, String edificio, String hora, String nombre, String profesores, String tipo) {
+	public Cursada(String edificio, String hora, String nombre, String aula) {
 		super();
-		this.comicion = comicion;
 		this.edificio = edificio;
 		this.hora = hora;
 		this.nombre = nombre;
-		this.profesores = profesores;
-		this.tipo = tipo;
+		this.aula = aula;
+		//this.profesores = profesores;
+		//this.tipo = tipo;
 	}
+	/*
 	public String getComicion() {
 		return comicion;
 	}
 	public void setComicion(String comicion) {
 		this.comicion = comicion;
 	}
+	*/
+
+	public String getAula() {
+		return aula;
+	}
+
+	public void setAula(String aula) {
+		this.aula = aula;
+	}
+
 	public String getEdificio() {
 		return edificio;
 	}
@@ -41,6 +53,7 @@ public class Cursada {
 	public void setNombre(String nombre) {
 		this.nombre = nombre;
 	}
+	/*
 	public String getProfesores() {
 		return profesores;
 	}
@@ -53,6 +66,6 @@ public class Cursada {
 	public void setTipo(String tipo) {
 		this.tipo = tipo;
 	}
-	
+	*/
 	
 }
