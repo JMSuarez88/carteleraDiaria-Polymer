@@ -165,7 +165,7 @@ public class CarteleraDiariaApplication {
 					.getInstance()
 					.getReference("cartelera");
 		} catch (Exception e) {
-
+			e.printStackTrace();
 		}
 	}
 
