@@ -30,7 +30,6 @@ public class CarteleraDiariaApplication {
 	private List<Cursada> pergamino;
 	// La fecha actual
 	// La formateamos a ddMMYYYY para usarla en la URL de los pdf
-	private Date date = new Date();
 	private PdfManager pdfManager = new PdfManager();
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMYYYY");
 
@@ -53,7 +52,11 @@ public class CarteleraDiariaApplication {
 		for (String s : sedes) {
 
 			// Creamos un objeto Sede con todas las cursadas del día por aula
-			Sede sede = pdfManager.analizeSedeData(s,simpleDateFormat.format(date));
+			Sede sede = pdfManager.analizeSedeData(s,simpleDateFormat.format(new Date()));
+
+            for (Map.Entry e : sede.getCursadas().entrySet()) {
+                logger.info(e.getValue().toString());
+            }
 
 			// Actualizamos las listas Junin/Pergamino según corresponda
 			actualizarListas(sede);
@@ -137,7 +140,7 @@ public class CarteleraDiariaApplication {
 			fieldRef = ref.child("fecha");
 			simpleDateFormat = new SimpleDateFormat("dd/MM/YYYY");
 			//task = fieldRef.setValue(simpleDateFormat.format(date));
-			task = fieldRef.setValue("09092017");
+			task = fieldRef.setValue(simpleDateFormat.format(new Date()));
 			Tasks.await(task);
 
 		} catch (Exception e) {
