@@ -31,7 +31,7 @@ public class CarteleraDiariaApplication {
 	// La fecha actual
 	// La formateamos a ddMMYYYY para usarla en la URL de los pdf
 	private PdfManager pdfManager = new PdfManager();
-	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMYYYY");
+	private SimpleDateFormat simpleDateFormat;
 
 	public static void main(String[] args) {
 		SpringApplication.run(CarteleraDiariaApplication.class, args);
@@ -44,6 +44,9 @@ public class CarteleraDiariaApplication {
 		logger.info("-------------------------------------------");
 		logger.info("\u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620 \u2620");
 
+        // Seteamos el formato para la fecha
+        simpleDateFormat = new SimpleDateFormat("ddMMYYYY");
+
 		// Reseteamos las listas con cada ejecución
 		this.junin = new ArrayList<>();
 		this.pergamino = new ArrayList<>();
@@ -53,10 +56,6 @@ public class CarteleraDiariaApplication {
 
 			// Creamos un objeto Sede con todas las cursadas del día por aula
 			Sede sede = pdfManager.analizeSedeData(s,simpleDateFormat.format(new Date()));
-
-            for (Map.Entry e : sede.getCursadas().entrySet()) {
-                logger.info(e.getValue().toString());
-            }
 
 			// Actualizamos las listas Junin/Pergamino según corresponda
 			actualizarListas(sede);
@@ -149,6 +148,10 @@ public class CarteleraDiariaApplication {
 
 	}
 
+    /**
+     *  Inicializa la conección con la base de datos de Firebase
+     *
+     */
 	static void inicializarFirebase() {
 		try {
 			// Fetch the service account key JSON file contents

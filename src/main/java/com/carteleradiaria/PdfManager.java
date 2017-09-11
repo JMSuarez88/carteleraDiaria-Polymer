@@ -63,6 +63,7 @@ public class PdfManager {
 
         try {
             // Pasamos a String el pdf
+            logger.info(path + sedeNombre + fecha + ".pdf");
             pdfText = this.toText(path + sedeNombre + fecha + ".pdf");
             // Limpiamos el string quitando acentos y demases
             pdfText = stripDiacritics(pdfText.toLowerCase());
