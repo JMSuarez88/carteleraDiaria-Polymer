@@ -111,6 +111,7 @@ public class PdfManager {
         // Empezamos recorriendo el String completo, caracter por caracter
         // La idea es ir pasandolo en limpio a otro String, quitando caracteres que no queremos
         for (int i=0 ; i < s.length() ; i++) {
+
             Character c = s.charAt(i);
 
             try {
@@ -148,6 +149,7 @@ public class PdfManager {
                     i += 1;
                 }
             }
+
         }
 
         // Creamos un array spliteando el String que pasamos en limpio
@@ -161,6 +163,7 @@ public class PdfManager {
         // Recorremos el array que creamos recién
         // En este punto es donde se empieza a hacer toda el parseo para armar el Map que tenemos que devolver
         for(int i=0 ; i < aux1.length ; i++){
+
             String s1 = aux1[i].trim();
 
             // Si el elemento actual es un String vacío, lo ignoramos
