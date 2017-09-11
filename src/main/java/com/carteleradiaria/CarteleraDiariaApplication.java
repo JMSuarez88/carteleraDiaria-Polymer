@@ -149,7 +149,7 @@ public class CarteleraDiariaApplication {
 	static void inicializarFirebase() {
 		try {
 			// Fetch the service account key JSON file contents
-			FileInputStream serviceAccount = new FileInputStream("C:/Users/kaotiks/workspace/carteleraDiaria-Polymer/src/main/resources/cartelera-diaria-firebase-adminsdk-y808g-833ac159bd.json");
+			FileInputStream serviceAccount = new FileInputStream("../../resources/cartelera-diaria-firebase-adminsdk-y808g-833ac159bd.json");
 
 			// Datos de configuración
 			FirebaseOptions options = new FirebaseOptions.Builder()
